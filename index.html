@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rohr bewegt sich — Termine &amp; Veranstaltungen</title>
+
+<!-- PWA / Home-Bildschirm (iOS + Android) -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#12261c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rohr Termine">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch-dark:#12261c;
+    --pitch:#1e4230;
+    --grass:#4f8f5b;
+    --chalk:#f3efe1;
+    --chalk-dim:#d9d3bd;
+    --gold:#e2a63b;
+    --gold-soft:#f0cf8a;
+    --line:rgba(243,239,225,0.16);
+    --card:#193826;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--pitch-dark);
+    color:var(--chalk);
+    font-family:'Work Sans',sans-serif;
+    line-height:1.5;
+  }
+  .display{font-family:'Anton',sans-serif; letter-spacing:0.02em; text-transform:uppercase;}
+
+  /* ---------- Header / Hero ---------- */
+  header{
+    padding:64px 6vw 48px;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(79,143,91,0.35), transparent 55%),
+      repeating-linear-gradient(180deg, var(--pitch) 0px, var(--pitch) 46px, var(--pitch-dark) 46px, var(--pitch-dark) 92px);
+    border-bottom:1px solid var(--line);
+    position:relative;
+    overflow:hidden;
+  }
+  .kicker{
+    display:inline-flex; align-items:center; gap:10px;
+    font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--gold-soft); margin-bottom:18px;
+  }
+  .kicker::before{content:"●"; color:var(--grass); font-size:10px;}
+  h1.display{
+    font-size:clamp(42px, 7vw, 88px);
+    line-height:0.98;
+    margin:0 0 20px;
+    color:var(--chalk);
+    max-width:14ch;
+  }
+  h1.display em{
+    font-style:normal;
+    color:var(--gold);
+    -webkit-text-stroke:1.5px var(--pitch-dark);
+  }
+  .lede{
+    max-width:56ch;
+    font-size:18px;
+    color:var(--chalk-dim);
+    margin-bottom:28px;
+  }
+
+  .update-row{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    margin-bottom:34px;
+  }
+  .update-btn{
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--gold); color:var(--pitch-dark);
+    font-family:'Anton',sans-serif; letter-spacing:0.04em; text-transform:uppercase;
+    font-size:15px;
+    border:none; border-radius:5px;
+    padding:14px 24px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 0 0 0 rgba(226,166,59,0.5);
+  }
+  .update-btn:hover{transform:translateY(-1px);}
+  .update-btn:active{transform:translateY(0px) scale(0.98);}
+  .update-btn .ico{
+    display:inline-block;
+    transition:transform .5s ease;
+  }
+  .update-btn.spin .ico{transform:rotate(360deg);}
+  .update-stamp{
+    font-size:12px; color:var(--chalk-dim);
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .update-stamp b{color:var(--gold-soft); font-weight:600;}
+
+  /* ---------- Filterleiste ---------- */
+  .filter-bar{
+    display:flex; flex-wrap:wrap; align-items:center; gap:22px;
+    margin-bottom:28px;
+    padding:16px 18px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+  }
+  .filter-group{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .filter-group-label{
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--gold-soft); font-weight:600; margin-right:2px;
+  }
+  .switch{
+    position:relative; display:inline-flex; align-items:center; gap:9px;
+    cursor:pointer; user-select:none; font-size:13px; color:var(--chalk-dim);
+  }
+  .switch input{position:absolute; opacity:0; width:0; height:0;}
+  .switch .track{
+    width:36px; height:20px; border-radius:999px;
+    background:var(--pitch-dark); border:1px solid var(--line);
+    position:relative; transition:background .15s ease, border-color .15s ease;
+    flex:0 0 auto;
+  }
+  .switch .track::after{
+    content:""; position:absolute; top:2px; left:2px;
+    width:14px; height:14px; border-radius:50%;
+    background:var(--chalk-dim);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .switch input:checked + .track{background:rgba(226,166,59,0.18); border-color:var(--gold);}
+  .switch input:checked + .track::after{transform:translateX(16px); background:var(--gold);}
+  .switch input:focus-visible + .track{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .chip{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:600; letter-spacing:0.02em;
+    padding:6px 13px; border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--pitch-dark);
+    color:var(--chalk-dim);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease, background .15s ease, opacity .15s ease;
+  }
+  .chip:hover{border-color:var(--gold-soft);}
+  .chip.active{
+    color:var(--pitch-dark); background:var(--gold); border-color:var(--gold);
+  }
+  .chip.reset{
+    background:transparent; color:var(--chalk-dim); border-style:dashed;
+  }
+  .chip.reset:hover{color:var(--gold-soft); border-color:var(--gold-soft);}
+  .filter-empty-note{
+    font-size:12px; color:var(--chalk-dim); font-style:italic;
+  }
+
+  .scoreboard{
+    display:flex; flex-wrap:wrap; gap:14px;
+  }
+  .scoreboard .cell{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:14px 20px;
+    min-width:130px;
+  }
+  .scoreboard .cell .num{
+    font-family:'Anton',sans-serif;
+    font-size:30px;
+    color:var(--gold);
+    display:block;
+  }
+  .scoreboard .cell .lbl{
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--chalk-dim);
+  }
+
+  /* ---------- Sections ---------- */
+  section{padding:56px 6vw;}
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:20px;
+    border-bottom:2px solid var(--line);
+    padding-bottom:16px; margin-bottom:32px;
+    flex-wrap:wrap;
+  }
+  .section-head h2.display{
+    font-size:clamp(28px,3.6vw,44px);
+    margin:0;
+    color:var(--chalk);
+  }
+  .section-head .tag{
+    font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--grass); font-weight:600;
+  }
+
+  .event-list{display:flex; flex-direction:column; gap:2px;}
+  a.event-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:12px 20px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:18px 22px;
+    transition:border-color .2s ease, transform .2s ease, background .2s ease, opacity .2s ease;
+    text-decoration:none;
+    color:inherit;
+    cursor:pointer;
+  }
+  a.event-row:hover{border-color:var(--gold); transform:translateX(4px); background:#1f4530;}
+  a.event-row:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+  a.event-row.is-past{opacity:0.55;}
+  a.event-row.is-next{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset;}
+  .event-thumb{
+    width:96px;
+    flex:0 0 96px;
+    align-self:stretch;
+    object-fit:cover;
+    border-radius:4px;
+    background:var(--pitch-dark);
+    border:1px solid var(--line);
+  }
+  .event-source{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--gold-soft); margin-top:8px;
+  }
+  .event-source::after{content:"↗"; font-size:12px;}
+  .event-date{
+    font-family:'Anton',sans-serif;
+    text-align:center;
+    background:var(--pitch);
+    border-radius:4px;
+    padding:8px 4px;
+    flex:0 0 96px;
+    width:96px;
+  }
+  .event-date .day{display:block; font-size:26px; color:var(--gold); line-height:1;}
+  .event-date .mon{display:block; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--chalk-dim);}
+  .event-body{flex:1 1 240px; min-width:0;}
+  .event-title{font-weight:600; font-size:17px; margin:0 0 4px;}
+  .event-meta{font-size:13px; color:var(--chalk-dim);}
+  .event-meta b{color:var(--gold-soft); font-weight:600;}
+  .badge{
+    flex:0 0 auto;
+    font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+    padding:5px 10px; border-radius:999px;
+    white-space:nowrap;
+    border:1px solid currentColor;
+  }
+  .badge.club{color:var(--grass);}
+  .badge.district{color:var(--gold-soft);}
+  .badge.waldfest{color:#c99bd6;}
+  .badge.festival{color:#7fb8d6;}
+  .badge.past{color:var(--chalk-dim); opacity:0.7;}
+  .badge.next{color:var(--pitch-dark); background:var(--gold); border-color:var(--gold);}
+
+  .row-actions{
+    flex:0 0 auto;
+    display:flex; gap:6px;
+    margin-left:auto;
+  }
+  .row-action-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px;
+    background:var(--pitch-dark);
+    border:1px solid var(--line);
+    border-radius:5px;
+    color:var(--chalk-dim);
+    font-size:14px;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+    position:relative;
+    z-index:2;
+  }
+  .row-action-btn:hover{border-color:var(--gold); color:var(--gold-soft);}
+  .row-action-btn.delete:hover{border-color:#e07a5f; color:#e07a5f;}
+
+  .note-card{
+    background:var(--card); border:1px dashed var(--line); border-radius:6px;
+    padding:20px 22px; font-size:14px; color:var(--chalk-dim);
+  }
+  .note-card a{color:var(--gold-soft);}
+
+  .grid-two{display:grid; grid-template-columns:1.3fr 1fr; gap:40px;}
+  @media (max-width:820px){
+    .grid-two{grid-template-columns:1fr;}
+    .event-date, .event-thumb{width:64px; flex:0 0 64px;}
+    a.event-row .badge{flex-basis:100%;}
+  }
+
+  .source-list{list-style:none; margin:0; padding:0; font-size:13px; color:var(--chalk-dim);}
+  .source-list li{padding:8px 0; border-bottom:1px solid var(--line);}
+  .source-list a{color:var(--gold-soft); text-decoration:none;}
+  .source-list a:hover{text-decoration:underline;}
+
+  footer{
+    padding:40px 6vw 60px;
+    border-top:1px solid var(--line);
+    font-size:13px; color:var(--chalk-dim);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  }
+  footer a{color:var(--gold-soft);}
+
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--gold); color:var(--pitch-dark);
+    font-weight:700; font-size:14px;
+    padding:12px 20px; border-radius:4px;
+    text-decoration:none;
+  }
+  .btn.ghost{background:transparent; color:var(--chalk); border:1px solid var(--line);}
+
+  /* ---------- Termin-Formular ---------- */
+  .add-toggle{
+    display:inline-flex; align-items:center; gap:8px;
+    background:transparent; color:var(--chalk);
+    border:1px solid var(--line); border-radius:5px;
+    font-family:'Anton',sans-serif; letter-spacing:0.04em; text-transform:uppercase;
+    font-size:14px; padding:12px 20px; cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .add-toggle:hover{border-color:var(--gold); color:var(--gold-soft);}
+  .add-toggle .plus{transition:transform .2s ease; display:inline-block;}
+  .add-toggle.open .plus{transform:rotate(45deg);}
+
+  .add-form-wrap{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s ease;
+  }
+  .add-form-wrap.open{max-height:1400px;}
+
+  .add-form{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:26px 26px 22px;
+    margin-top:18px;
+  }
+  .add-form .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 20px;
+  }
+  .add-form .full{grid-column:1 / -1;}
+  .field label{
+    display:block;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--gold-soft); font-weight:600; margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    background:var(--pitch-dark);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px 12px;
+    color:var(--chalk);
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--gold);
+  }
+  .field textarea{resize:vertical; min-height:44px;}
+  .field .hint{font-size:11px; color:var(--chalk-dim); margin-top:4px;}
+  .add-form-actions{
+    display:flex; align-items:center; gap:14px; justify-content:space-between;
+    margin-top:20px; flex-wrap:wrap;
+  }
+  .add-form-msg{font-size:13px; color:var(--grass); font-weight:600;}
+  .manual-tag{
+    font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--pitch-dark); background:var(--chalk-dim);
+    padding:3px 8px; border-radius:999px; margin-left:8px;
+  }
+
+  /* ---------- Bild-Feld im Termin-Formular ---------- */
+  .image-field-row{display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;}
+  .image-field-row .field{flex:1 1 220px; margin:0;}
+  .image-preview-box{
+    display:none;
+    flex:0 0 auto;
+    align-items:center; gap:10px;
+  }
+  .image-preview-box.show{display:flex;}
+  .image-preview-box img{
+    width:72px; height:72px; object-fit:cover;
+    border-radius:6px; border:1px solid var(--line);
+    background:var(--pitch-dark);
+  }
+  .image-preview-remove{
+    background:transparent; border:1px solid var(--line); color:var(--chalk-dim);
+    border-radius:4px; font-size:11px; padding:6px 10px; cursor:pointer;
+  }
+  .image-preview-remove:hover{border-color:#e07a5f; color:#e07a5f;}
+  .image-from-flyer-note{font-size:11px; color:var(--gold-soft); margin-top:6px;}
+
+  /* ---------- Event-Zeilen ohne Link (z. B. Flyer ohne Quelle) ---------- */
+  a.event-row.no-link{cursor:default;}
+  a.event-row.no-link:hover{transform:none; border-color:var(--line); background:var(--card);}
+  .event-source.no-link::after{content:none;}
+
+  /* ---------- Flyer-Scan / OCR ---------- */
+  .scan-toggle{
+    display:inline-flex; align-items:center; gap:8px;
+    background:transparent; color:var(--chalk);
+    border:1px solid var(--line); border-radius:5px;
+    font-family:'Anton',sans-serif; letter-spacing:0.04em; text-transform:uppercase;
+    font-size:14px; padding:12px 20px; cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .scan-toggle:hover{border-color:var(--grass); color:var(--gold-soft);}
+  .scan-toggle .plus{transition:transform .2s ease; display:inline-block;}
+  .scan-toggle.open .plus{transform:rotate(45deg);}
+
+  .scan-form-wrap{max-height:0; overflow:hidden; transition:max-height .35s ease;}
+  .scan-form-wrap.open{max-height:2000px;}
+
+  .scan-form{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:26px 26px 22px;
+    margin-top:18px;
+  }
+  .scan-intro{font-size:13px; color:var(--chalk-dim); margin:0 0 18px; max-width:64ch;}
+
+  .scan-dropzone{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    border:1.5px dashed var(--line);
+    border-radius:8px;
+    padding:32px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .scan-dropzone:hover, .scan-dropzone.drag{border-color:var(--gold); background:rgba(226,166,59,0.06);}
+  .scan-dropzone .scan-ico{font-size:30px;}
+  .scan-dropzone .scan-cta{font-family:'Anton',sans-serif; letter-spacing:0.03em; text-transform:uppercase; font-size:15px; color:var(--gold-soft);}
+  .scan-dropzone .scan-sub{font-size:12px; color:var(--chalk-dim);}
+
+  .scan-preview-row{
+    display:flex; gap:18px; align-items:flex-start; margin-top:18px; flex-wrap:wrap;
+  }
+  .scan-thumb{
+    width:130px; height:130px; object-fit:cover;
+    border-radius:6px; border:1px solid var(--line);
+    background:var(--pitch-dark);
+    flex-shrink:0;
+  }
+  .scan-status{flex:1; min-width:220px;}
+  .scan-status-label{font-size:13px; font-weight:600; color:var(--gold-soft); margin-bottom:8px;}
+  .scan-progress-track{
+    width:100%; height:8px; border-radius:99px;
+    background:var(--pitch-dark); border:1px solid var(--line);
+    overflow:hidden; margin-bottom:8px;
+  }
+  .scan-progress-bar{height:100%; width:0%; background:var(--gold); transition:width .2s ease;}
+  .scan-progress-text{font-size:12px; color:var(--chalk-dim);}
+
+  .scan-result{margin-top:20px;}
+  .scan-result .field{margin-bottom:16px;}
+  .scan-result textarea{
+    width:100%; min-height:110px;
+    background:var(--pitch-dark); border:1px solid var(--line); border-radius:4px;
+    padding:10px 12px; color:var(--chalk); font-family:'Work Sans',sans-serif; font-size:13px;
+    resize:vertical;
+  }
+  .scan-result textarea:focus{outline:none; border-color:var(--gold);}
+  .scan-guess-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 16px;
+    font-size:12px; color:var(--chalk-dim); margin:10px 0 16px;
+    background:var(--pitch-dark); border:1px solid var(--line); border-radius:6px; padding:12px 14px;
+  }
+  .scan-guess-grid b{color:var(--gold-soft); font-weight:600;}
+  .scan-form-actions{display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:6px;}
+  .scan-error{color:#e07a5f; font-size:13px; font-weight:600; margin-top:10px;}
+  .scan-hint{font-size:11px; color:var(--chalk-dim); margin-top:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">Stadtbezirk Vaihingen · Stadtteil Rohr</span>
+  <h1 class="display">Was läuft<br>in <em>Rohr?</em></h1>
+  <p class="lede">Eine Übersicht über Termine des TSV Rohr und Veranstaltungen rund um Stuttgart-Rohr &amp; Vaihingen — von Vereinssport bis Waldfest. Jeder Termin ist mit seiner Originalquelle verlinkt (Klick auf die Karte).</p>
+
+  <div class="update-row">
+    <button class="update-btn" id="updateBtn" type="button">
+      <span class="ico">↻</span> Aktualisieren
+    </button>
+    <div class="update-stamp">
+      <span>Neu sortiert &amp; markiert anhand des <b>aktuellen Datums</b> deines Geräts</span>
+      <span id="stampText">Stand: —</span>
+    </div>
+    <button class="add-toggle" id="addToggleBtn" type="button" aria-expanded="false">
+      <span class="plus">＋</span> Termin hinzufügen
+    </button>
+    <button class="scan-toggle" id="scanToggleBtn" type="button" aria-expanded="false">
+      <span class="plus">📷</span> Flyer scannen
+    </button>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <div class="filter-group">
+      <label class="switch">
+        <input type="checkbox" id="filterShowPast">
+        <span class="track" aria-hidden="true"></span>
+        Vergangene Termine anzeigen
+      </label>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">Kategorie</span>
+      <button type="button" class="chip active" data-filter-cat="club">Verein</button>
+      <button type="button" class="chip active" data-filter-cat="district">Stadtbezirk</button>
+      <button type="button" class="chip active" data-filter-cat="waldfest">Waldfest</button>
+      <button type="button" class="chip active" data-filter-cat="festival">Festival</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">Bereich</span>
+      <button type="button" class="chip active" data-filter-section="umgebung">Rohr &amp; Vaihingen</button>
+      <button type="button" class="chip active" data-filter-section="tsv">TSV Rohr</button>
+    </div>
+    <div class="filter-group">
+      <button type="button" class="chip reset" id="filterResetBtn">Filter zurücksetzen</button>
+    </div>
+  </div>
+
+  <div class="add-form-wrap" id="addFormWrap">
+    <form class="add-form" id="addForm">
+      <div class="grid">
+        <div class="field full">
+          <label for="f-title">Titel der Veranstaltung *</label>
+          <input type="text" id="f-title" required placeholder="z. B. Sommerfest des XY-Vereins">
+        </div>
+        <div class="field">
+          <label for="f-date">Datum (Start) *</label>
+          <input type="date" id="f-date" required>
+        </div>
+        <div class="field">
+          <label for="f-endDate">Datum (Ende, optional)</label>
+          <input type="date" id="f-endDate">
+        </div>
+        <div class="field">
+          <label for="f-section">Bereich *</label>
+          <select id="f-section" required>
+            <option value="umgebung">Rohr &amp; Vaihingen</option>
+            <option value="tsv">TSV Rohr</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-cat">Kategorie</label>
+          <select id="f-cat">
+            <option value="district">Stadtbezirk</option>
+            <option value="waldfest">Waldfest</option>
+            <option value="festival">Festival</option>
+            <option value="club">Verein</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="f-meta">Ort / Beschreibung</label>
+          <textarea id="f-meta" placeholder="z. B. Ab 14:00 Uhr · Festplatz Musterstraße 1"></textarea>
+        </div>
+        <div class="field full">
+          <label for="f-image">Bild (URL, optional — wird als Miniatur neben dem Termin angezeigt)</label>
+          <div class="image-field-row">
+            <div class="field" style="margin:0;">
+              <input type="text" id="f-image" placeholder="https://... oder leer lassen">
+            </div>
+            <div class="image-preview-box" id="fImagePreviewBox">
+              <img id="fImagePreview" alt="Bildvorschau">
+              <button type="button" class="image-preview-remove" id="fImageRemoveBtn">Entfernen</button>
+            </div>
+          </div>
+          <p class="image-from-flyer-note" id="fImageFlyerNote" style="display:none;">Bild wurde automatisch vom gescannten Flyer-Foto übernommen.</p>
+        </div>
+        <div class="field">
+          <label for="f-url">Quelle (Link, optional bei Flyer-Fotos)</label>
+          <input type="url" id="f-url" placeholder="https://... (falls bekannt)">
+        </div>
+        <div class="field">
+          <label for="f-source">Quellenname (Anzeigetext)</label>
+          <input type="text" id="f-source" placeholder="z. B. tsv-rohr.de">
+        </div>
+      </div>
+      <div class="add-form-actions">
+        <div>
+          <button type="submit" class="btn">Termin speichern</button>
+          <button type="button" class="btn ghost" id="addCancelBtn" style="margin-left:10px;">Abbrechen</button>
+        </div>
+        <span class="add-form-msg" id="addFormMsg"></span>
+      </div>
+      <p style="font-size:11px;color:var(--chalk-dim);margin-top:14px;">
+        Hinweis: Die Termine werden beim Laden der Seite aus dem verknüpften Gist gelesen. Neue, bearbeitete und gelöschte Termine werden automatisch zurück in den Gist gespeichert (siehe Sync-Status unter dem Aktualisieren-Button) — sofern in der Datei ein gültiger GitHub-Token hinterlegt ist. Ohne Token gelten Änderungen nur für diese Browser-Sitzung. Manuell hinzugefügte Termine sind mit „Manuell“ gekennzeichnet.
+      </p>
+    </form>
+  </div>
+
+  <div class="scan-form-wrap" id="scanFormWrap">
+    <div class="scan-form">
+      <p class="scan-intro">Foto oder Foto-Scan eines Flyers, Aushangs oder Plakats hochladen &mdash; die Texterkennung (OCR) l&auml;uft direkt im Browser (keine Daten verlassen dein Ger&auml;t). Titel, Datum und Ort werden automatisch als Vorschlag erkannt und ins Termin-Formular oben &uuml;bertragen; bitte vor dem Speichern kurz pr&uuml;fen und korrigieren, da OCR nicht immer perfekt ist.</p>
+
+      <div class="scan-dropzone" id="scanDropzone" tabindex="0" role="button" aria-label="Flyer-Foto ausw&auml;hlen">
+        <span class="scan-ico">&#128220;</span>
+        <span class="scan-cta">Flyer-Foto ausw&auml;hlen</span>
+        <span class="scan-sub">Foto aufnehmen oder Bilddatei (JPG/PNG) ausw&auml;hlen</span>
+      </div>
+      <input type="file" id="scanFileInput" accept="image/*" capture="environment" style="display:none;">
+
+      <div class="scan-preview-row" id="scanPreviewRow" style="display:none;">
+        <img id="scanThumb" class="scan-thumb" alt="Vorschau des hochgeladenen Flyers">
+        <div class="scan-status">
+          <div class="scan-status-label" id="scanStatusLabel">Bereite Texterkennung vor &hellip;</div>
+          <div class="scan-progress-track"><div class="scan-progress-bar" id="scanProgressBar"></div></div>
+          <div class="scan-progress-text" id="scanProgressText"></div>
+        </div>
+      </div>
+
+      <div class="scan-result" id="scanResult" style="display:none;">
+        <div class="field">
+          <label for="scanText">Erkannter Text (bei Bedarf korrigieren, dann &bdquo;Vorschau aktualisieren&ldquo;)</label>
+          <textarea id="scanText"></textarea>
+        </div>
+        <div class="scan-form-actions">
+          <button type="button" class="btn ghost" id="scanReparseBtn">Vorschau aktualisieren</button>
+        </div>
+        <div class="scan-guess-grid" id="scanGuessGrid"></div>
+        <div class="scan-form-actions">
+          <button type="button" class="btn" id="scanApplyBtn">In Termin-Formular &uuml;bernehmen</button>
+          <button type="button" class="btn ghost" id="scanResetBtn">Neues Foto</button>
+        </div>
+      </div>
+
+      <div class="scan-error" id="scanError" style="display:none;"></div>
+
+      <p class="scan-hint">Die Erkennung nutzt Tesseract.js (deutsches Sprachmodell) und l&auml;uft vollst&auml;ndig lokal im Browser. Bei unscharfen Fotos, handschriftlichem Text oder ungew&ouml;hnlichen Schriftarten kann die Erkennung ungenau sein &mdash; Titel, Datum und Ort daher immer im Formular gegenpr&uuml;fen, bevor der Termin gespeichert wird.</p>
+    </div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="cell"><span class="num" id="statTotal">–</span><span class="lbl">Termine gesamt</span></div>
+    <div class="cell"><span class="num" id="statUpcoming">–</span><span class="lbl">Noch bevorstehend</span></div>
+    <div class="cell"><span class="num" id="statNextIn">–</span><span class="lbl">Tage bis zum nächsten</span></div>
+  </div>
+</header>
+
+<section id="umgebung">
+  <div class="section-head">
+    <h2 class="display">Rohr &amp; Vaihingen</h2>
+    <span class="tag">Veranstaltungen in der Umgebung</span>
+  </div>
+  <div class="event-list" id="listUmgebung"></div>
+
+  <div class="note-card" style="margin-top:22px;">
+    <strong style="color:var(--chalk)">Rohrer Waldfest</strong> — seit über 125 Jahren bespielen fünf bis sechs Vereine aus Rohr und Vaihingen abwechselnd das Festgelände auf der Rohrer Höhe (Musberger Str. 9), jeweils sonntags/montags von Ende Juni bis Anfang August. Der vollständige, laufend gepflegte Terminkalender (inkl. Fasnet, Wanderungen &amp; weiterer Vereinstermine) steht bei den <a href="https://rohrer-waldhexen.com/Termine/" target="_blank" rel="noopener">Rohrer Waldhexen</a>.<br><br>
+    Das <strong style="color:var(--chalk)">Vaihinger StadtFest</strong> pausiert 2026 aus organisatorischen Gründen. Laufend aktualisierte Termine (Konzerte, Lesungen, Workshops rund um den Vaihinger Markt) gibt es bei <a href="https://unser-vaihingen.de/veranstaltungen/" target="_blank" rel="noopener">unser-vaihingen.de/veranstaltungen</a> und im offiziellen <a href="https://www.stuttgart.de/service/veranstaltungen" target="_blank" rel="noopener">Stuttgart-Veranstaltungskalender</a>.<br><br>
+    Für den <strong style="color:var(--chalk)">Rest des Jahres 2026</strong> sind laut dem offiziellen <a href="https://unser-vaihingen.de/wp-content/uploads/2026/06/Kultur-Vaihingen_12Seiter_DINlangquer_090626.pdf" target="_blank" rel="noopener">Kulturkalender Stuttgart-Vaihingen 2/2026</a> u. a. der <strong style="color:var(--chalk)">45. Vaihinger Herbst</strong> (18.–20. September, Kreativmeile am Vaihinger Markt) und der <strong style="color:var(--chalk)">47. Vaihinger Weihnachtsmarkt</strong> (28.–29. November, Vaihinger Markt &amp; Rathausplatz) bestätigt. Der Kalender enthält darüber hinaus zahlreiche weitere Konzerte, Ausstellungen, Kurse und Kleinveranstaltungen (u. a. im Circuleum, im Bürgerhaus Lauchhau-Lauchäcker und in der Stadtteilbibliothek), die hier aus Platzgründen nicht alle einzeln aufgeführt sind — das vollständige 12-seitige PDF lohnt einen eigenen Blick.
+  </div>
+</section>
+
+<section id="tsv">
+  <div class="section-head">
+    <h2 class="display">TSV Rohr</h2>
+    <span class="tag">Dürrlewangstraße 54 · 70565 Stuttgart-Rohr</span>
+  </div>
+  <div class="grid-two">
+    <div class="event-list" id="listTsv"></div>
+    <div class="note-card">
+      <strong style="color:var(--chalk)">Hinweis zur Datenlage</strong><br><br>
+      Die offizielle Vereinsseite <a href="http://www.tsv-rohr.de" target="_blank" rel="noopener">tsv-rohr.de</a> blockiert automatisierte Abfragen (robots.txt), daher konnten nicht alle internen Termine (z. B. Fußball-Terminkalender, Gymnastik, Dart, Judo) einzeln ausgelesen werden.<br><br>
+      Für den vollständigen, tagesaktuellen Kalender bitte direkt besuchen:
+      <div class="cta-row">
+        <a class="btn" href="http://www.tsv-rohr.de" target="_blank" rel="noopener">tsv-rohr.de öffnen</a>
+        <a class="btn ghost" href="https://www.fussball.de/verein/tsv-rohr-wuerttemberg/-/id/00ES8GNB100000A7VV0AG08LVUPGND5I" target="_blank" rel="noopener">Spielplan (fussball.de)</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quellen">
+  <div class="section-head">
+    <h2 class="display" style="font-size:26px;">Quellen</h2>
+  </div>
+  <ul class="source-list">
+    <li>TSV Rohr (offiziell) — <a href="http://www.tsv-rohr.de" target="_blank" rel="noopener">tsv-rohr.de</a></li>
+    <li>TSV Rohr Tennis / Tennishalle Rohr — <a href="https://www.tennishalle-rohr.de/Termine" target="_blank" rel="noopener">tennishalle-rohr.de/Termine</a></li>
+    <li>TSV Rohr auf fussball.de — <a href="https://www.fussball.de/verein/tsv-rohr-wuerttemberg/-/id/00ES8GNB100000A7VV0AG08LVUPGND5I" target="_blank" rel="noopener">Vereinsprofil &amp; Spielplan</a></li>
+    <li>Rohrer Waldhexen — <a href="https://rohrer-waldhexen.com/Termine/" target="_blank" rel="noopener">Terminkalender Rohrer Waldfest 2026</a></li>
+    <li>Musikverein Vaihingen-Rohr (MVR Bigband) — <a href="http://mvr-bigband.de/index.php/aktuelles-2" target="_blank" rel="noopener">mvr-bigband.de/aktuelles</a></li>
+    <li>Stadt Stuttgart — <a href="https://www.stuttgart.de/service/aktuelle-meldungen/2026/juni/sommerfeste-in-den-stadtbezirken-wo-nachbarschaft-und-lebensfreude-zusammenkommen" target="_blank" rel="noopener">Sommerfeste in den Stadtbezirken, Bezirk Vaihingen (Amtsblatt, Juni 2026)</a></li>
+    <li>Unser Vaihingen — <a href="https://unser-vaihingen.de/veranstaltungen/" target="_blank" rel="noopener">Veranstaltungskalender</a></li>
+    <li>Kulturkalender Stuttgart-Vaihingen 2. HJ 2026 (Heimatring Stuttgart-Vaihingen/Rohr e. V.) — <a href="https://unser-vaihingen.de/wp-content/uploads/2026/06/Kultur-Vaihingen_12Seiter_DINlangquer_090626.pdf" target="_blank" rel="noopener">PDF-Download</a></li>
+    <li>Rohrer Seefest — <a href="https://unser-vaihingen.de/veranstaltung/rohrer-seefest-2026/" target="_blank" rel="noopener">unser-vaihingen.de</a></li>
+    <li>Griechisches Sommerfest — <a href="https://www.stuttgarter-zeitung.de/lokales/stuttgart/veranstaltung-in-stuttgart-griechisches-sommerfest-an-der-schwabengalerie-79248887.html" target="_blank" rel="noopener">stuttgarter-zeitung.de</a></li>
+    <li>45. Umsonst &amp; Draußen — <a href="https://www.ud-stuttgart.de/" target="_blank" rel="noopener">ud-stuttgart.de</a></li>
+  </ul>
+
+  <div class="note-card" style="margin-top:22px;">
+    <strong style="color:var(--chalk)">Zur Funktion des Update-Buttons:</strong> Diese Seite lädt ihre Termine aus der separaten Datei <code>events.json</code> (liegt im selben Verzeichnis) und hat sonst keine Serveranbindung — der Button kann daher nicht selbstständig neu im Web nach Terminen suchen. Er baut die Liste aber bei jedem Klick anhand des <b>tatsächlichen aktuellen Datums</b> deines Geräts neu auf: bereits vergangene Termine werden ausgegraut, der nächste anstehende Termin wird hervorgehoben, und Zähler/Countdown werden neu berechnet. Für neu recherchierte Termine (z. B. neue Waldfeste im nächsten Jahr) einfach im Chat nach einer Aktualisierung fragen — die Änderungen landen dann direkt in <code>events.json</code>.
+  </div>
+</section>
+
+<section id="disclaimer" style="padding-top:0;">
+  <div class="section-head">
+    <h2 class="display" style="font-size:26px;">Rechtlicher Hinweis</h2>
+  </div>
+  <div class="note-card" style="font-size:13px; line-height:1.65;">
+    <strong style="color:var(--chalk)">Haftungsausschluss für Inhalte</strong><br>
+    Diese Seite ist eine privat, unabhängig und ohne Gewinnabsicht erstellte Übersicht. Für die Richtigkeit, Vollständigkeit und Aktualität der genannten Termine, Uhrzeiten und Orte wird keine Gewähr übernommen. Veranstalter können Termine kurzfristig ändern, verschieben oder absagen — bitte die Angaben vor einem Besuch stets direkt beim jeweiligen Veranstalter bzw. auf der verlinkten Originalquelle prüfen.<br><br>
+
+    <strong style="color:var(--chalk)">Haftungsausschluss für externe Links</strong><br>
+    Diese Seite enthält Links zu externen Webseiten Dritter, auf deren Inhalte kein Einfluss besteht. Für diese fremden Inhalte kann daher keine Gewähr übernommen werden; für die Inhalte der verlinkten Seiten ist ausschließlich deren jeweiliger Anbieter oder Betreiber verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft; rechtswidrige Inhalte waren zu diesem Zeitpunkt nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden entsprechende Links umgehend entfernt. Mit der reinen Verlinkung ist keine Übernahme fremder Inhalte oder eine Empfehlung verbunden; es erfolgt hiermit eine ausdrückliche Distanzierung von allen Inhalten der verlinkten Seiten.
+  </div>
+</section>
+
+<footer>
+  <span>Datenstand der Recherche: 11. Juli 2026 · keine automatische Live-Websuche</span>
+  <span>Für tagesaktuelle Infos immer auf der jeweiligen Vereins-/Stadtseite prüfen</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+<script>
+  // ---- Datenbasis ----
+  // Die Termine liegen nicht mehr inline im HTML, sondern in einer separaten
+  // events.json (Trennung von Struktur/Logik und Inhalten). Diese Datei liegt
+  // in einem SECRET GIST auf GitHub (Nutzer onlinepost2030-source, Gist
+  // 707dced5bfb4994fef17243ef9a0f35e, Datei "gistfile1.txt") und wird per
+  // fetch() von der Raw-URL des Gists geladen — ohne Token, da Secret Gists
+  // über ihre Raw-URL öffentlich abrufbar sind (nur eben nicht auffindbar/
+  // durchsuchbar). Damit bleibt ein eventuelles privates Repo unangetastet,
+  // während die Seite trotzdem ohne eigenen Server funktioniert.
+  //
+  // Bei künftigen Terminänderungen: den Gist unter
+  //   https://gist.github.com/onlinepost2030-source/707dced5bfb4994fef17243ef9a0f35e
+  // bearbeiten und speichern — die untenstehende Raw-URL (ohne Versions-Hash)
+  // liefert danach automatisch den neuen Stand, ein erneutes Verlinken ist
+  // nicht nötig. Tipp: die Gist-Datei lässt sich dort jederzeit noch in
+  // "events.json" umbenennen, falls gewünscht (rein kosmetisch, der Inhalt
+  // bleibt gültiges JSON) — dann müsste die URL unten entsprechend angepasst
+  // werden.
+  const EVENTS_JSON_URL = 'https://gist.githubusercontent.com/onlinepost2030-source/707dced5bfb4994fef17243ef9a0f35e/raw/gistfile1.txt';
+
+  // ---- Schreibzugriff auf den Gist (Speichern von Änderungen) ----
+  // ACHTUNG SICHERHEIT: Der folgende Token ist ein GitHub Personal Access
+  // Token (classic) mit dem Scope "gist". Er erlaubt Schreibzugriff auf ALLE
+  // Gists dieses GitHub-Accounts (nicht nur diesen einen). Er steht hier
+  // offen im Code, weil "Variante 1" (Token fest im Code) gewählt wurde.
+  // Das bedeutet: JEDE PERSON, DIE DIESE HTML-DATEI ÖFFNET UND SICH DEN
+  // QUELLTEXT ANSIEHT (Rechtsklick -> "Seitenquelltext anzeigen"), KANN
+  // DIESEN TOKEN LESEN UND DAMIT SELBST GISTS DIESES ACCOUNTS BEARBEITEN.
+  // Diese Datei daher NICHT an andere weitergeben, nicht in ein (auch
+  // privates) Git-Repo einchecken und nicht auf einen Webserver hochladen,
+  // auf den andere Zugriff haben. Nur für den rein lokalen, persönlichen
+  // Gebrauch auf dem eigenen Rechner gedacht.
+  // Token erzeugen: siehe Anleitung im Chat-Verlauf (Settings -> Developer
+  // settings -> Personal access tokens -> Tokens (classic) -> Generate new
+  // token (classic) -> nur Scope "gist" ankreuzen).
+  const GITHUB_TOKEN = 'DEIN-GITHUB-TOKEN-HIER-EINTRAGEN'; // ghp_xxxxxxxxxxxx...
+  const GIST_ID = '707dced5bfb4994fef17243ef9a0f35e';
+  const GIST_FILENAME = 'gistfile1.txt';
+
+  let EVENTS_UMGEBUNG = [];
+  let EVENTS_TSV = [];
+  let dataLoaded = false;
+  let dataLoadError = null;
+
+  const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+  function parseDate(iso){
+    const [y,m,d] = iso.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function fmtDay(iso, endIso){
+    const d1 = parseDate(iso);
+    if(!endIso) return { day: String(d1.getDate()).padStart(2,'0'), mon: MONTHS[d1.getMonth()] };
+    const d2 = parseDate(endIso);
+    if(d1.getMonth() === d2.getMonth()){
+      return { day: `${String(d1.getDate()).padStart(2,'0')}–${String(d2.getDate()).padStart(2,'0')}`, mon: MONTHS[d1.getMonth()] };
+    }
+    return { day: `${String(d1.getDate())}.${d1.getMonth()+1}.–${String(d2.getDate())}.${d2.getMonth()+1}.`, mon: '' };
+  }
+
+  // ---- Filterzustand ----
+  const filterState = {
+    showPast: false,
+    cats: new Set(['club', 'district', 'waldfest', 'festival']),
+    sections: new Set(['umgebung', 'tsv'])
+  };
+
+  function renderList(containerId, events, today){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    // sortierbare Liste: Termine ohne Datum zuerst (laufend), dann aufsteigend
+    const sorted = [...events].sort((a,b)=>{
+      if(a.date === null) return -1;
+      if(b.date === null) return 1;
+      return parseDate(a.date) - parseDate(b.date);
+    });
+
+    // nächsten bevorstehenden Termin (mit Datum) ermitteln — unabhängig von Filtern,
+    // damit die Markierung "Nächster Termin" auch bei aktiven Filtern korrekt bleibt
+    const upcomingDated = sorted.filter(e => e.date && parseDate(e.endDate || e.date) >= today);
+    const nextEvent = upcomingDated.length ? upcomingDated.reduce((min,e)=> parseDate(e.date) < parseDate(min.date) ? e : min) : null;
+
+    let visibleCount = 0;
+
+    sorted.forEach(ev => {
+      let isPast = false;
+      if(ev.date !== null){
+        const end = ev.endDate ? parseDate(ev.endDate) : parseDate(ev.date);
+        isPast = end < today;
+      }
+
+      // Filter anwenden: Kategorie muss aktiv sein UND (Termin ist nicht vergangen ODER "vergangene anzeigen" ist an)
+      const catOk = filterState.cats.has(ev.cat);
+      const pastOk = !isPast || filterState.showPast;
+      if(!catOk || !pastOk) return;
+
+      visibleCount++;
+
+      const row = document.createElement('a');
+      const hasUrl = !!ev.url;
+      row.className = hasUrl ? 'event-row' : 'event-row no-link';
+      if(hasUrl){
+        row.href = ev.url;
+        row.target = '_blank';
+        row.rel = 'noopener';
+      } else {
+        row.href = 'javascript:void(0)';
+        row.addEventListener('click', e => e.preventDefault());
+      }
+
+      let dateHtml, badgeHtml, isNext = false;
+
+      if(ev.date === null){
+        dateHtml = `<span class="day">·</span><span class="mon">lfd.</span>`;
+        badgeHtml = `<span class="badge ${ev.cat}">Laufend</span>`;
+      } else {
+        isNext = nextEvent === ev;
+        const {day, mon} = fmtDay(ev.date, ev.endDate);
+        dateHtml = `<span class="day">${day}</span><span class="mon">${mon}</span>`;
+        if(isPast){
+          const y = parseDate(ev.date).getFullYear();
+          badgeHtml = `<span class="badge past">Beendet ${y}</span>`;
+        } else if(isNext){
+          badgeHtml = `<span class="badge next">Nächster Termin</span>`;
+        } else {
+          const labels = {club:'Verein', district:'Stadtbezirk', waldfest:'Waldfest', festival:'Festival'};
+          badgeHtml = `<span class="badge ${ev.cat}">${labels[ev.cat] || ev.cat}</span>`;
+        }
+      }
+
+      row.classList.toggle('is-past', isPast);
+      row.classList.toggle('is-next', isNext);
+
+      const thumbHtml = ev.image
+        ? `<img class="event-thumb" src="${ev.image}" alt="" loading="lazy" onerror="this.remove();">`
+        : '';
+
+      row.innerHTML = `
+        ${thumbHtml}
+        <div class="event-date">${dateHtml}</div>
+        <div class="event-body">
+          <p class="event-title">${ev.title}${ev.manual ? '<span class="manual-tag">Manuell</span>' : ''}</p>
+          <p class="event-meta">${ev.meta}${isPast ? ' — <b>bereits stattgefunden</b>' : ''}</p>
+          <span class="event-source${hasUrl ? '' : ' no-link'}">Quelle: ${ev.source}</span>
+        </div>
+        ${badgeHtml}
+        <div class="row-actions">
+          <button type="button" class="row-action-btn edit" title="Termin bearbeiten" aria-label="Termin bearbeiten">✎</button>
+          <button type="button" class="row-action-btn delete" title="Termin löschen" aria-label="Termin löschen">✕</button>
+        </div>
+      `;
+
+      const editBtn = row.querySelector('.row-action-btn.edit');
+      const deleteBtn = row.querySelector('.row-action-btn.delete');
+      editBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        openEditForm(ev, events);
+      });
+      deleteBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        if(confirm(`„${ev.title.replace(/<[^>]+>/g,'')}" wirklich löschen?`)){
+          const idx = events.indexOf(ev);
+          if(idx !== -1) events.splice(idx, 1);
+          rebuild();
+          saveEventsToGist();
+        }
+      });
+
+      container.appendChild(row);
+    });
+
+    if(visibleCount === 0){
+      const note = document.createElement('div');
+      note.className = 'note-card filter-empty-note';
+      note.textContent = sorted.length
+        ? 'Keine Termine passen zu den aktuellen Filtern.'
+        : 'Keine Termine in diesem Bereich.';
+      container.appendChild(note);
+    }
+
+    return { sorted, nextEvent };
+  }
+
+  function rebuild(){
+    const btn = document.getElementById('updateBtn');
+    btn.classList.add('spin');
+    setTimeout(()=> btn.classList.remove('spin'), 550);
+
+    const now = new Date();
+    const today = startOfDay(now);
+
+    const resUmgebung = renderList('listUmgebung', EVENTS_UMGEBUNG, today);
+    const resTsv = renderList('listTsv', EVENTS_TSV, today);
+
+    const allDated = [...EVENTS_UMGEBUNG, ...EVENTS_TSV].filter(e => e.date);
+    const total = allDated.length;
+    const upcoming = allDated.filter(e => parseDate(e.endDate || e.date) >= today);
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statUpcoming').textContent = upcoming.length;
+
+    let nextIn = '–';
+    if(upcoming.length){
+      const soonest = upcoming.reduce((min,e)=> parseDate(e.date) < parseDate(min.date) ? e : min);
+      const diffDays = Math.round((parseDate(soonest.date) - today) / 86400000);
+      nextIn = diffDays <= 0 ? 'heute' : diffDays;
+    }
+    document.getElementById('statNextIn').textContent = nextIn;
+
+    const stampOpts = { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' };
+    document.getElementById('stampText').innerHTML = `Stand: <b>${now.toLocaleString('de-DE', stampOpts)} Uhr</b>`;
+  }
+
+  document.getElementById('updateBtn').addEventListener('click', rebuild);
+
+  // ---- Filterleiste: Event-Listener ----
+  function applySectionVisibility(){
+    document.getElementById('umgebung').style.display = filterState.sections.has('umgebung') ? '' : 'none';
+    document.getElementById('tsv').style.display = filterState.sections.has('tsv') ? '' : 'none';
+  }
+
+  const filterShowPastEl = document.getElementById('filterShowPast');
+  filterShowPastEl.checked = filterState.showPast;
+  filterShowPastEl.addEventListener('change', ()=>{
+    filterState.showPast = filterShowPastEl.checked;
+    rebuild();
+  });
+
+  document.querySelectorAll('[data-filter-cat]').forEach(chip => {
+    chip.addEventListener('click', ()=>{
+      const cat = chip.dataset.filterCat;
+      if(filterState.cats.has(cat)){
+        filterState.cats.delete(cat);
+        chip.classList.remove('active');
+      } else {
+        filterState.cats.add(cat);
+        chip.classList.add('active');
+      }
+      rebuild();
+    });
+  });
+
+  document.querySelectorAll('[data-filter-section]').forEach(chip => {
+    chip.addEventListener('click', ()=>{
+      const section = chip.dataset.filterSection;
+      if(filterState.sections.has(section)){
+        filterState.sections.delete(section);
+        chip.classList.remove('active');
+      } else {
+        filterState.sections.add(section);
+        chip.classList.add('active');
+      }
+      applySectionVisibility();
+    });
+  });
+
+  document.getElementById('filterResetBtn').addEventListener('click', ()=>{
+    filterState.showPast = false;
+    filterState.cats = new Set(['club', 'district', 'waldfest', 'festival']);
+    filterState.sections = new Set(['umgebung', 'tsv']);
+    filterShowPastEl.checked = false;
+    document.querySelectorAll('[data-filter-cat], [data-filter-section]').forEach(chip => chip.classList.add('active'));
+    applySectionVisibility();
+    rebuild();
+  });
+
+  // ---- Eingabemaske: manuelle Termine ----
+  const addToggleBtn = document.getElementById('addToggleBtn');
+  const addFormWrap = document.getElementById('addFormWrap');
+  const addForm = document.getElementById('addForm');
+  const addFormMsg = document.getElementById('addFormMsg');
+  const addCancelBtn = document.getElementById('addCancelBtn');
+
+  let editingEvent = null;
+  let editingArray = null;
+  const addFormSubmitBtn = addForm.querySelector('button[type="submit"]');
+  const addFormTitleDefault = 'Termin hinzufügen';
+
+  function toggleForm(open){
+    const isOpen = open !== undefined ? open : !addFormWrap.classList.contains('open');
+    addFormWrap.classList.toggle('open', isOpen);
+    addToggleBtn.classList.toggle('open', isOpen);
+    addToggleBtn.setAttribute('aria-expanded', String(isOpen));
+    if(isOpen){
+      document.getElementById('f-title').focus();
+      const scanWrap = document.getElementById('scanFormWrap');
+      const scanBtn = document.getElementById('scanToggleBtn');
+      if(scanWrap && scanWrap.classList.contains('open')){
+        scanWrap.classList.remove('open');
+        scanBtn.classList.remove('open');
+        scanBtn.setAttribute('aria-expanded', 'false');
+      }
+    } else {
+      exitEditMode();
+    }
+  }
+
+  function exitEditMode(){
+    editingEvent = null;
+    editingArray = null;
+    addFormSubmitBtn.textContent = 'Termin speichern';
+    addToggleBtn.innerHTML = '<span class="plus">＋</span> ' + addFormTitleDefault;
+  }
+
+  function decodeEntities(str){
+    const el = document.createElement('textarea');
+    el.innerHTML = str || '';
+    return el.value;
+  }
+  function stripToPlainText(str){
+    return decodeEntities((str || '').replace(/<[^>]+>/g,''));
+  }
+
+  function openEditForm(ev, arr){
+    editingEvent = ev;
+    editingArray = arr;
+
+    document.getElementById('f-title').value = stripToPlainText(ev.title);
+    document.getElementById('f-date').value = ev.date || '';
+    document.getElementById('f-endDate').value = ev.endDate || '';
+    document.getElementById('f-section').value = arr === EVENTS_TSV ? 'tsv' : 'umgebung';
+    document.getElementById('f-cat').value = ev.cat || 'district';
+    document.getElementById('f-meta').value = stripToPlainText(ev.meta);
+    document.getElementById('f-url').value = ev.url || '';
+    document.getElementById('f-source').value = ev.source || '';
+    fImageInput.value = ev.image || '';
+    updateImagePreview();
+    fImageFlyerNote.style.display = 'none';
+
+    addFormSubmitBtn.textContent = 'Änderungen speichern';
+    addToggleBtn.innerHTML = '<span class="plus">＋</span> Termin bearbeiten';
+    addFormMsg.textContent = '';
+
+    toggleForm(true);
+  }
+
+  addToggleBtn.addEventListener('click', ()=>{
+    if(addFormWrap.classList.contains('open')){
+      toggleForm(false);
+    } else {
+      exitEditMode();
+      toggleForm(true);
+    }
+  });
+
+  // ---- Bild-Feld: Live-Vorschau, Entfernen-Button ----
+  const fImageInput = document.getElementById('f-image');
+  const fImagePreviewBox = document.getElementById('fImagePreviewBox');
+  const fImagePreview = document.getElementById('fImagePreview');
+  const fImageRemoveBtn = document.getElementById('fImageRemoveBtn');
+  const fImageFlyerNote = document.getElementById('fImageFlyerNote');
+
+  function updateImagePreview(){
+    const val = fImageInput.value.trim();
+    if(!val){
+      fImagePreviewBox.classList.remove('show');
+      fImageFlyerNote.style.display = 'none';
+      return;
+    }
+    fImagePreview.src = val;
+    fImagePreviewBox.classList.add('show');
+  }
+  fImagePreview.addEventListener('error', ()=> fImagePreviewBox.classList.remove('show'));
+  fImageInput.addEventListener('input', ()=>{
+    fImageFlyerNote.style.display = 'none';
+    updateImagePreview();
+  });
+  fImageRemoveBtn.addEventListener('click', ()=>{
+    fImageInput.value = '';
+    updateImagePreview();
+  });
+  function resetImageField(){
+    fImageInput.value = '';
+    fImagePreviewBox.classList.remove('show');
+    fImageFlyerNote.style.display = 'none';
+  }
+
+  addCancelBtn.addEventListener('click', ()=>{
+    addForm.reset();
+    resetImageField();
+    addFormMsg.textContent = '';
+    toggleForm(false);
+  });
+
+  addForm.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const title = document.getElementById('f-title').value.trim();
+    const date = document.getElementById('f-date').value;
+    const endDate = document.getElementById('f-endDate').value;
+    const section = document.getElementById('f-section').value;
+    const cat = document.getElementById('f-cat').value;
+    const meta = document.getElementById('f-meta').value.trim();
+    const image = fImageInput.value.trim();
+    const url = document.getElementById('f-url').value.trim();
+    const source = document.getElementById('f-source').value.trim();
+
+    if(!title || !date){
+      addFormMsg.style.color = '#e07a5f';
+      addFormMsg.textContent = 'Bitte mindestens Titel und Datum ausfüllen.';
+      return;
+    }
+
+    let sourceLabel = source;
+    if(!sourceLabel){
+      if(url){
+        try { sourceLabel = new URL(url).hostname.replace(/^www\./,''); }
+        catch(err){ sourceLabel = 'manuell hinzugefügt'; }
+      } else {
+        sourceLabel = 'ohne Link (manuell / Flyer)';
+      }
+    }
+
+    if(editingEvent){
+      // Bestehenden Termin aktualisieren
+      editingEvent.date = date;
+      editingEvent.endDate = endDate || undefined;
+      editingEvent.title = title;
+      editingEvent.meta = meta || 'Details siehe Quelle';
+      editingEvent.image = image || undefined;
+      editingEvent.url = url || null;
+      editingEvent.source = sourceLabel;
+      editingEvent.cat = cat;
+
+      // Bereich ggf. wechseln (zwischen TSV und Umgebung verschieben)
+      const targetArr = section === 'tsv' ? EVENTS_TSV : EVENTS_UMGEBUNG;
+      if(targetArr !== editingArray){
+        const idx = editingArray.indexOf(editingEvent);
+        if(idx !== -1) editingArray.splice(idx, 1);
+        targetArr.push(editingEvent);
+      }
+
+      rebuild();
+      saveEventsToGist();
+      addFormMsg.style.color = 'var(--grass)';
+      addFormMsg.textContent = `„${title}“ wurde aktualisiert.`;
+      addForm.reset();
+      resetImageField();
+      exitEditMode();
+      setTimeout(()=>{ addFormMsg.textContent = ''; }, 4000);
+      return;
+    }
+
+    const newEvent = {
+      date: date,
+      endDate: endDate || undefined,
+      title: title,
+      meta: meta || 'Details siehe Quelle',
+      image: image || undefined,
+      url: url || null,
+      source: sourceLabel,
+      cat: cat,
+      manual: true
+    };
+
+    if(section === 'tsv'){
+      EVENTS_TSV.push(newEvent);
+    } else {
+      EVENTS_UMGEBUNG.push(newEvent);
+    }
+
+    rebuild();
+    saveEventsToGist();
+
+    addFormMsg.style.color = 'var(--grass)';
+    addFormMsg.textContent = `„${title}“ wurde hinzugefügt.`;
+    addForm.reset();
+    resetImageField();
+    setTimeout(()=>{ addFormMsg.textContent = ''; }, 4000);
+  });
+
+  // ---- Flyer-Scan / OCR ----
+  const scanToggleBtn = document.getElementById('scanToggleBtn');
+  const scanFormWrap = document.getElementById('scanFormWrap');
+  const scanDropzone = document.getElementById('scanDropzone');
+  const scanFileInput = document.getElementById('scanFileInput');
+  const scanPreviewRow = document.getElementById('scanPreviewRow');
+  const scanThumb = document.getElementById('scanThumb');
+  const scanStatusLabel = document.getElementById('scanStatusLabel');
+  const scanProgressBar = document.getElementById('scanProgressBar');
+  const scanProgressText = document.getElementById('scanProgressText');
+  const scanResult = document.getElementById('scanResult');
+  const scanText = document.getElementById('scanText');
+  const scanGuessGrid = document.getElementById('scanGuessGrid');
+  const scanReparseBtn = document.getElementById('scanReparseBtn');
+  const scanApplyBtn = document.getElementById('scanApplyBtn');
+  const scanResetBtn = document.getElementById('scanResetBtn');
+  const scanError = document.getElementById('scanError');
+
+  let lastGuess = null;
+  let scannedImageDataUrl = null;
+
+  function toggleScanForm(open){
+    const isOpen = open !== undefined ? open : !scanFormWrap.classList.contains('open');
+    scanFormWrap.classList.toggle('open', isOpen);
+    scanToggleBtn.classList.toggle('open', isOpen);
+    scanToggleBtn.setAttribute('aria-expanded', String(isOpen));
+    if(isOpen){
+      // Manuelles Formular schließen, damit nicht beide gleichzeitig offen sind
+      toggleForm(false);
+    }
+  }
+  scanToggleBtn.addEventListener('click', ()=> toggleScanForm());
+
+  scanDropzone.addEventListener('click', ()=> scanFileInput.click());
+  scanDropzone.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); scanFileInput.click(); }
+  });
+  scanDropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); scanDropzone.classList.add('drag'); });
+  scanDropzone.addEventListener('dragleave', ()=> scanDropzone.classList.remove('drag'));
+  scanDropzone.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    scanDropzone.classList.remove('drag');
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) handleScanFile(e.dataTransfer.files[0]);
+  });
+  scanFileInput.addEventListener('change', ()=>{
+    if(scanFileInput.files && scanFileInput.files[0]) handleScanFile(scanFileInput.files[0]);
+  });
+
+  function resetScanUI(){
+    scanPreviewRow.style.display = 'none';
+    scanResult.style.display = 'none';
+    scanError.style.display = 'none';
+    scanError.textContent = '';
+    scanProgressBar.style.width = '0%';
+    scanProgressText.textContent = '';
+    scanText.value = '';
+    scanGuessGrid.innerHTML = '';
+    lastGuess = null;
+    scannedImageDataUrl = null;
+    scanFileInput.value = '';
+  }
+  scanResetBtn.addEventListener('click', resetScanUI);
+
+  function handleScanFile(file){
+    resetScanUI();
+    const reader = new FileReader();
+    reader.onload = () => {
+      scanThumb.src = reader.result;
+      scannedImageDataUrl = reader.result;
+      scanPreviewRow.style.display = 'flex';
+      runOcr(file);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function runOcr(file){
+    if(typeof Tesseract === 'undefined'){
+      scanError.style.display = 'block';
+      scanError.textContent = 'Die Texterkennung (Tesseract.js) konnte nicht geladen werden — bitte Internetverbindung prüfen und erneut versuchen. Der Termin kann alternativ über „Termin hinzufügen" per Hand eingetragen werden.';
+      scanStatusLabel.textContent = 'Fehler beim Laden der Texterkennung';
+      return;
+    }
+    scanStatusLabel.textContent = 'Texterkennung läuft …';
+    Tesseract.recognize(file, 'deu', {
+      logger: (info) => {
+        if(info.status){
+          scanStatusLabel.textContent = info.status === 'recognizing text' ? 'Text wird erkannt …' : info.status;
+        }
+        if(typeof info.progress === 'number'){
+          const pct = Math.round(info.progress * 100);
+          scanProgressBar.style.width = pct + '%';
+          scanProgressText.textContent = pct + ' %';
+        }
+      }
+    }).then(({ data: { text } }) => {
+      scanStatusLabel.textContent = 'Text erkannt ✓';
+      scanText.value = text.trim();
+      scanResult.style.display = 'block';
+      updateScanGuess();
+    }).catch(err => {
+      scanError.style.display = 'block';
+      scanError.textContent = 'Texterkennung fehlgeschlagen: ' + (err && err.message ? err.message : err) + '. Bitte anderes Foto probieren oder den Termin manuell eintragen.';
+      scanStatusLabel.textContent = 'Fehler bei der Texterkennung';
+    });
+  }
+
+  scanReparseBtn.addEventListener('click', updateScanGuess);
+
+  // ---- Heuristische Erkennung von Titel / Datum / Ort aus dem OCR-Text ----
+  const MONTH_MAP = {
+    'januar':1,'jan':1, 'februar':2,'feb':2, 'märz':3,'maerz':3,'mär':3,'mrz':3,
+    'april':4,'apr':4, 'mai':5, 'juni':6,'jun':6, 'juli':7,'jul':7,
+    'august':8,'aug':8, 'september':9,'sep':9,'sept':9,
+    'oktober':10,'okt':10, 'november':11,'nov':11, 'dezember':12,'dez':12
+  };
+  const CAT_KEYWORDS = [
+    { cat:'waldfest', section:'umgebung', words:['waldfest','festplatz rohrer höhe','zeltrotation'] },
+    { cat:'club', section:'tsv', words:['tsv rohr','tsv-rohr','vereinsheim','mitgliederversammlung'] },
+    { cat:'festival', section:'umgebung', words:['festival','markt','herbst','weihnachtsmarkt'] },
+    { cat:'district', section:'umgebung', words:['konzert','stadtbezirk','vaihingen','bürgerforum'] }
+  ];
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  function findDatesInText(text){
+    const results = [];
+    const lower = text.toLowerCase();
+    const monthNames = Object.keys(MONTH_MAP).sort((a,b)=> b.length - a.length).join('|');
+
+    // 1) Bereich mit Monatsname: "12. – 13. Juli 2026" / "12. bis 13. Juli 2026"
+    const rangeNameRe = new RegExp('(\\d{1,2})\\.?\\s*(?:[–-]|bis)\\s*(\\d{1,2})\\.?\\s*(' + monthNames + ')\\.?\\s*(\\d{4})?', 'gi');
+    let m;
+    while((m = rangeNameRe.exec(lower))){
+      const year = m[4] ? parseInt(m[4],10) : new Date().getFullYear();
+      const month = MONTH_MAP[m[3].replace('.', '')];
+      if(month){
+        results.push({
+          index: m.index,
+          date: `${year}-${pad2(month)}-${pad2(parseInt(m[1],10))}`,
+          endDate: `${year}-${pad2(month)}-${pad2(parseInt(m[2],10))}`
+        });
+      }
+    }
+    // 2) Einzeldatum mit Monatsname: "12. Juli 2026" / "12. Juli"
+    const singleNameRe = new RegExp('(\\d{1,2})\\.?\\s*(' + monthNames + ')\\.?\\s*(\\d{4})?', 'gi');
+    while((m = singleNameRe.exec(lower))){
+      const overlaps = results.some(r => m.index >= r.index && m.index < r.index + 20);
+      if(overlaps) continue;
+      const year = m[3] ? parseInt(m[3],10) : new Date().getFullYear();
+      const month = MONTH_MAP[m[2].replace('.', '')];
+      if(month){
+        results.push({ index:m.index, date:`${year}-${pad2(month)}-${pad2(parseInt(m[1],10))}`, endDate:null });
+      }
+    }
+    // 3) Numerisches Datum: "12.07.2026" / "12.07.26" / "12.07."
+    const numRe = /(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})?/g;
+    while((m = numRe.exec(lower))){
+      const day = parseInt(m[1],10), month = parseInt(m[2],10);
+      if(month < 1 || month > 12 || day < 1 || day > 31) continue;
+      let year = m[3] ? parseInt(m[3],10) : new Date().getFullYear();
+      if(year < 100) year += 2000;
+      results.push({ index:m.index, date:`${year}-${pad2(month)}-${pad2(day)}`, endDate:null });
+    }
+
+    results.sort((a,b)=> a.index - b.index);
+    return results;
+  }
+
+  function findTimeInText(text){
+    const m = text.match(/(\d{1,2})[:.](\d{2})\s*(uhr)?/i);
+    if(m) return `${pad2(parseInt(m[1],10))}:${m[2]} Uhr`;
+    const m2 = text.match(/(\d{1,2})\s*uhr/i);
+    if(m2) return `${pad2(parseInt(m2[1],10))}:00 Uhr`;
+    return null;
+  }
+
+  function guessTitle(lines, dateLineIndices){
+    const candidates = lines
+      .map((l, i) => ({ text: l.trim(), i }))
+      .filter(({text, i}) => {
+        if(text.length < 4) return false;
+        if(dateLineIndices.has(i)) return false;
+        if(/^\d+[.\d\s:–-]*$/.test(text)) return false;
+        const letters = (text.match(/[a-zäöüßA-ZÄÖÜ]/g) || []).length;
+        return letters >= 4;
+      });
+    if(!candidates.length) return '';
+    candidates.sort((a,b)=> b.text.length - a.text.length);
+    return candidates[0].text.slice(0, 90);
+  }
+
+  function guessLocation(lines){
+    const streetRe = /(straße|strasse|str\.|platz|weg|allee|gasse)\b/i;
+    const plzRe = /\b\d{5}\b/;
+    const hit = lines.find(l => streetRe.test(l) || plzRe.test(l));
+    return hit ? hit.trim() : '';
+  }
+
+  function guessCategory(text){
+    const lower = text.toLowerCase();
+    for(const entry of CAT_KEYWORDS){
+      if(entry.words.some(w => lower.includes(w))) return entry;
+    }
+    return { cat:'district', section:'umgebung' };
+  }
+
+  function updateScanGuess(){
+    const text = scanText.value;
+    if(!text.trim()){
+      scanGuessGrid.innerHTML = '<div>Kein Text zum Auswerten vorhanden.</div>';
+      lastGuess = null;
+      return;
+    }
+    const lines = text.split('\n').filter(l => l.trim().length);
+    const dates = findDatesInText(text);
+    const time = findTimeInText(text);
+    const catGuess = guessCategory(text);
+
+    const dateLineIndices = new Set();
+    lines.forEach((l, i) => { if(/\d{1,2}[.\/]\d{1,2}|\d{4}/.test(l)) dateLineIndices.add(i); });
+
+    const title = guessTitle(lines, dateLineIndices);
+    const location = guessLocation(lines);
+
+    const metaParts = [];
+    if(time) metaParts.push(`Ab <b>${time}</b>`);
+    if(location) metaParts.push(location);
+    metaParts.push('(aus Flyer-Foto erkannt – bitte prüfen)');
+
+    lastGuess = {
+      title: title,
+      date: dates[0] ? dates[0].date : '',
+      endDate: dates[0] ? (dates[0].endDate || '') : '',
+      meta: metaParts.join(' · '),
+      cat: catGuess.cat,
+      section: catGuess.section
+    };
+
+    scanGuessGrid.innerHTML = `
+      <div><b>Titel:</b> ${lastGuess.title || '<i>nicht erkannt</i>'}</div>
+      <div><b>Datum:</b> ${lastGuess.date || '<i>nicht erkannt</i>'}${lastGuess.endDate ? ' – ' + lastGuess.endDate : ''}</div>
+      <div><b>Uhrzeit:</b> ${time || '<i>nicht erkannt</i>'}</div>
+      <div><b>Ort/Adresse:</b> ${location || '<i>nicht erkannt</i>'}</div>
+      <div><b>Kategorie (Vorschlag):</b> ${lastGuess.cat}</div>
+      <div><b>Bereich (Vorschlag):</b> ${lastGuess.section === 'tsv' ? 'TSV Rohr' : 'Rohr & Vaihingen'}</div>
+    `;
+  }
+
+  scanApplyBtn.addEventListener('click', ()=>{
+    if(!lastGuess){
+      scanError.style.display = 'block';
+      scanError.textContent = 'Bitte zuerst einen Text erkennen bzw. „Vorschau aktualisieren" klicken.';
+      return;
+    }
+    document.getElementById('f-title').value = lastGuess.title || '';
+    document.getElementById('f-date').value = lastGuess.date || '';
+    document.getElementById('f-endDate').value = lastGuess.endDate || '';
+    document.getElementById('f-section').value = lastGuess.section || 'umgebung';
+    document.getElementById('f-cat').value = lastGuess.cat || 'district';
+    document.getElementById('f-meta').value = lastGuess.meta || '';
+    document.getElementById('f-url').value = '';
+    document.getElementById('f-source').value = 'Flyer-Foto (OCR-Scan)';
+
+    if(scannedImageDataUrl){
+      fImageInput.value = scannedImageDataUrl;
+      updateImagePreview();
+      fImageFlyerNote.style.display = 'block';
+    }
+
+    toggleScanForm(false);
+    toggleForm(true);
+    addFormMsg.style.color = 'var(--gold-soft)';
+    addFormMsg.textContent = 'Felder aus Flyer-Scan übernommen — bitte vor dem Speichern prüfen.';
+  });
+
+  // ---- Termine aus externer JSON-Datei laden ----
+  function showListMessage(text, isError){
+    const html = `<div class="note-card" style="${isError ? 'border-color:#e07a5f;color:#e07a5f;' : ''}">${text}</div>`;
+    document.getElementById('listUmgebung').innerHTML = html;
+    document.getElementById('listTsv').innerHTML = html;
+  }
+
+  async function loadEvents(){
+    if(EVENTS_JSON_URL.includes('DEIN-USER') || EVENTS_JSON_URL.includes('DEIN-GIST-ID')){
+      showListMessage(
+        `Es ist noch keine echte Gist-URL eingetragen.<br><br>` +
+        `Bitte in der Datei <code>rohr-veranstaltungen.html</code> die Konstante <code>EVENTS_JSON_URL</code> ` +
+        `auf die Raw-URL des Secret Gists mit der <code>events.json</code> setzen (siehe Kommentar direkt darüber).`,
+        true
+      );
+      return;
+    }
+    showListMessage('Termine werden geladen &hellip;', false);
+    try{
+      // Cache-Busting: gist.githubusercontent.com cached Raw-Inhalte serverseitig
+      // (CDN) für einige Minuten, unabhängig vom Browser-Cache. Ein wechselnder
+      // Query-Parameter sorgt dafür, dass jede Anfrage als "neue" URL behandelt
+      // wird und garantiert den aktuellen Stand liefert.
+      const bustedUrl = EVENTS_JSON_URL + (EVENTS_JSON_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
+      const res = await fetch(bustedUrl, { cache: 'no-store' });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      EVENTS_UMGEBUNG = Array.isArray(data.umgebung) ? data.umgebung : [];
+      EVENTS_TSV = Array.isArray(data.tsv) ? data.tsv : [];
+      dataLoaded = true;
+      dataLoadError = null;
+      rebuild();
+    } catch(err){
+      dataLoaded = false;
+      dataLoadError = err;
+      showListMessage(
+        `Termine konnten nicht geladen werden (${err.message || err}).<br><br>` +
+        `Mögliche Ursachen: die Gist-URL in <code>EVENTS_JSON_URL</code> ist falsch, der Gist wurde gelöscht/umbenannt, ` +
+        `oder es besteht gerade keine Internetverbindung. Der Gist selbst muss nicht &ouml;ffentlich (public) sein &mdash; ` +
+        `ein <b>Secret Gist</b> reicht aus, solange die <b>Raw-URL</b> korrekt hinterlegt ist.`,
+        true
+      );
+    }
+  }
+
+  loadEvents();
+
+  // ---- Service Worker registrieren (Home-Bildschirm / Offline-Start) ----
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('./sw.js').catch(err=>{
+        console.warn('Service Worker konnte nicht registriert werden:', err);
+      });
+    });
+  }
+
+  // ---- Änderungen zurück in den Gist speichern ----
+  const syncStatus = document.createElement('div');
+  syncStatus.id = 'syncStatus';
+  syncStatus.style.cssText = 'font-size:12px;color:var(--chalk-dim);margin-top:8px;min-height:16px;';
+  document.querySelector('.update-row').insertAdjacentElement('afterend', syncStatus);
+
+  function setSyncStatus(text, isError){
+    syncStatus.style.color = isError ? '#e07a5f' : 'var(--chalk-dim)';
+    syncStatus.textContent = text;
+  }
+
+  async function saveEventsToGist(){
+    if(!GITHUB_TOKEN || GITHUB_TOKEN.includes('DEIN-GITHUB-TOKEN-HIER')){
+      setSyncStatus('Nicht gespeichert: Es ist noch kein GitHub-Token in GITHUB_TOKEN eingetragen. Änderung gilt nur für diese Sitzung.', true);
+      return false;
+    }
+    setSyncStatus('Speichere Änderungen im Gist …', false);
+    try{
+      const payload = {
+        files: {
+          [GIST_FILENAME]: {
+            content: JSON.stringify({ umgebung: EVENTS_UMGEBUNG, tsv: EVENTS_TSV }, null, 2)
+          }
+        }
+      };
+      const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        let detail = '';
+        try{ const errBody = await res.json(); detail = errBody.message ? ` (${errBody.message})` : ''; } catch(_e){}
+        throw new Error(`HTTP ${res.status}${detail}`);
+      }
+      const now = new Date();
+      const stampOpts = { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' };
+      setSyncStatus(`Im Gist gespeichert um ${now.toLocaleString('de-DE', stampOpts)} Uhr.`, false);
+      return true;
+    } catch(err){
+      setSyncStatus(
+        `Speichern fehlgeschlagen (${err.message || err}). Änderung ist nur lokal in dieser Sitzung vorhanden. ` +
+        `Mögliche Ursache: Token ungültig/abgelaufen, Token hat nicht den Scope "gist", oder Gist-ID falsch.`,
+        true
+      );
+      return false;
+    }
+  }
+
+</script>
+
+</body>
+</html>
