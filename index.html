@@ -98,7 +98,6 @@
   .update-btn.spin .ico{transform:rotate(360deg);}
   .update-stamp{
     font-size:12px; color:var(--chalk-dim);
-    display:flex; flex-direction:column; gap:2px;
   }
   .update-stamp b{color:var(--gold-soft); font-weight:600;}
 
@@ -496,14 +495,12 @@
 <body>
 
 <header>
-  <span class="kicker">Stadtbezirk Vaihingen · Stadtteil Rohr · Ansicht</span>
   <h1 class="display">Was läuft<br>in <em>Rohr?</em></h1>
   <p class="lede">Eine Übersicht über Termine des TSV Rohr und Veranstaltungen rund um Stuttgart-Rohr &amp; Vaihingen — von Vereinssport bis Waldfest. Jeder Termin ist mit seiner Originalquelle verlinkt (Klick auf die Karte).</p>
 
   <div class="update-row">
     <div class="update-stamp">
-      <span>Neu sortiert &amp; markiert anhand des <b>aktuellen Datums</b> deines Geräts</span>
-      <span id="stampText">Stand: —</span>
+      Neu sortiert &amp; markiert anhand des <b>aktuellen Datums</b> deines Geräts — <span id="stampText">Stand: —</span>
     </div>
   </div>
 
@@ -533,7 +530,6 @@
   </div>
 
   <div class="scoreboard">
-    <div class="cell"><span class="num" id="statTotal">–</span><span class="lbl">Termine gesamt</span></div>
     <div class="cell"><span class="num" id="statUpcoming">–</span><span class="lbl">Noch bevorstehend</span></div>
     <div class="cell"><span class="num" id="statNextIn">–</span><span class="lbl">Tage bis zum nächsten</span></div>
   </div>
@@ -770,10 +766,8 @@
     const resTsv = renderList('listTsv', EVENTS_TSV, today);
 
     const allDated = [...EVENTS_UMGEBUNG, ...EVENTS_TSV].filter(e => e.date);
-    const total = allDated.length;
     const upcoming = allDated.filter(e => parseDate(e.endDate || e.date) >= today);
 
-    document.getElementById('statTotal').textContent = total;
     document.getElementById('statUpcoming').textContent = upcoming.length;
 
     let nextIn = '–';
