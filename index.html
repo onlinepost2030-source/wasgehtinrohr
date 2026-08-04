@@ -160,23 +160,32 @@
   }
 
   .scoreboard{
-    display:flex; flex-wrap:wrap; gap:14px;
+    display:flex; flex-wrap:nowrap; gap:10px;
   }
   .scoreboard .cell{
     background:var(--card);
     border:1px solid var(--line);
     border-radius:4px;
-    padding:14px 20px;
-    min-width:130px;
+    padding:12px 8px;
+    flex:1 1 0;
+    min-width:0;
+    text-align:center;
   }
   .scoreboard .cell .num{
     font-family:'Anton',sans-serif;
-    font-size:30px;
+    font-size:26px;
     color:var(--gold);
     display:block;
+    white-space:nowrap;
   }
   .scoreboard .cell .lbl{
-    font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--chalk-dim);
+    font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:var(--chalk-dim);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  @media (max-width:420px){
+    .scoreboard .cell{padding:10px 4px;}
+    .scoreboard .cell .num{font-size:21px;}
+    .scoreboard .cell .lbl{font-size:8.5px; letter-spacing:0.02em;}
   }
 
   /* ---------- Sections ---------- */
@@ -492,9 +501,6 @@
   <p class="lede">Eine Übersicht über Termine des TSV Rohr und Veranstaltungen rund um Stuttgart-Rohr &amp; Vaihingen — von Vereinssport bis Waldfest. Jeder Termin ist mit seiner Originalquelle verlinkt (Klick auf die Karte).</p>
 
   <div class="update-row">
-    <button class="update-btn" id="updateBtn" type="button">
-      <span class="ico">↻</span> Aktualisieren
-    </button>
     <div class="update-stamp">
       <span>Neu sortiert &amp; markiert anhand des <b>aktuellen Datums</b> deines Geräts</span>
       <span id="stampText">Stand: —</span>
@@ -583,10 +589,6 @@
     <li>Griechisches Sommerfest — <a href="https://www.stuttgarter-zeitung.de/lokales/stuttgart/veranstaltung-in-stuttgart-griechisches-sommerfest-an-der-schwabengalerie-79248887.html" target="_blank" rel="noopener">stuttgarter-zeitung.de</a></li>
     <li>45. Umsonst &amp; Draußen — <a href="https://www.ud-stuttgart.de/" target="_blank" rel="noopener">ud-stuttgart.de</a></li>
   </ul>
-
-  <div class="note-card" style="margin-top:22px;">
-    <strong style="color:var(--chalk)">Zur Funktion des Update-Buttons:</strong> Diese Seite lädt ihre Termine aus der separaten Datei <code>events.json</code> (liegt im selben Verzeichnis) und hat sonst keine Serveranbindung — der Button kann daher nicht selbstständig neu im Web nach Terminen suchen. Er baut die Liste aber bei jedem Klick anhand des <b>tatsächlichen aktuellen Datums</b> deines Geräts neu auf: bereits vergangene Termine werden ausgegraut, der nächste anstehende Termin wird hervorgehoben, und Zähler/Countdown werden neu berechnet. Für neu recherchierte Termine (z. B. neue Waldfeste im nächsten Jahr) einfach im Chat nach einer Aktualisierung fragen — die Änderungen landen dann direkt in <code>events.json</code>.
-  </div>
 </section>
 
 <section id="disclaimer" style="padding-top:0;">
@@ -761,10 +763,6 @@
   }
 
   function rebuild(){
-    const btn = document.getElementById('updateBtn');
-    btn.classList.add('spin');
-    setTimeout(()=> btn.classList.remove('spin'), 550);
-
     const now = new Date();
     const today = startOfDay(now);
 
@@ -789,8 +787,6 @@
     const stampOpts = { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' };
     document.getElementById('stampText').innerHTML = `Stand: <b>${now.toLocaleString('de-DE', stampOpts)} Uhr</b>`;
   }
-
-  document.getElementById('updateBtn').addEventListener('click', rebuild);
 
   // ---- Filterleiste: Event-Listener ----
   function applySectionVisibility(){
