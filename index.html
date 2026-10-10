@@ -496,7 +496,7 @@
 
 <header>
   <h1 class="display">Was läuft<br>in <em>Rohr?</em></h1>
-  <p class="lede">Eine Übersicht über Termine des TSV Rohr und Veranstaltungen rund um Stuttgart-Rohr &amp; Vaihingen — von Vereinssport bis Waldfest. Jeder Termin ist mit seiner Originalquelle verlinkt (Klick auf die Karte).</p>
+  <p class="lede">Eine Übersicht über Termine des TSV Rohr und Veranstaltungen rund um Stuttgart-Rohr &amp; Vaihingen — von Vereinssport bis Waldfest.</p>
 
   <div class="update-row">
     <div class="update-stamp">
@@ -511,18 +511,6 @@
         <span class="track" aria-hidden="true"></span>
         Vergangene Termine anzeigen
       </label>
-    </div>
-    <div class="filter-group">
-      <span class="filter-group-label">Kategorie</span>
-      <button type="button" class="chip active" data-filter-cat="club">Verein</button>
-      <button type="button" class="chip active" data-filter-cat="district">Stadtbezirk</button>
-      <button type="button" class="chip active" data-filter-cat="waldfest">Waldfest</button>
-      <button type="button" class="chip active" data-filter-cat="festival">Festival</button>
-    </div>
-    <div class="filter-group">
-      <span class="filter-group-label">Bereich</span>
-      <button type="button" class="chip active" data-filter-section="umgebung">Rohr &amp; Vaihingen</button>
-      <button type="button" class="chip active" data-filter-section="tsv">TSV Rohr</button>
     </div>
     <div class="filter-group">
       <button type="button" class="chip reset" id="filterResetBtn">Filter zurücksetzen</button>
@@ -546,25 +534,6 @@
     <strong style="color:var(--chalk)">Rohrer Waldfest</strong> — seit über 125 Jahren bespielen fünf bis sechs Vereine aus Rohr und Vaihingen abwechselnd das Festgelände auf der Rohrer Höhe (Musberger Str. 9), jeweils sonntags/montags von Ende Juni bis Anfang August. Der vollständige, laufend gepflegte Terminkalender (inkl. Fasnet, Wanderungen &amp; weiterer Vereinstermine) steht bei den <a href="https://rohrer-waldhexen.com/Termine/" target="_blank" rel="noopener">Rohrer Waldhexen</a>.<br><br>
     Das <strong style="color:var(--chalk)">Vaihinger StadtFest</strong> pausiert 2026 aus organisatorischen Gründen. Laufend aktualisierte Termine (Konzerte, Lesungen, Workshops rund um den Vaihinger Markt) gibt es bei <a href="https://unser-vaihingen.de/veranstaltungen/" target="_blank" rel="noopener">unser-vaihingen.de/veranstaltungen</a> und im offiziellen <a href="https://www.stuttgart.de/service/veranstaltungen" target="_blank" rel="noopener">Stuttgart-Veranstaltungskalender</a>.<br><br>
     Für den <strong style="color:var(--chalk)">Rest des Jahres 2026</strong> sind laut dem offiziellen <a href="https://unser-vaihingen.de/wp-content/uploads/2026/06/Kultur-Vaihingen_12Seiter_DINlangquer_090626.pdf" target="_blank" rel="noopener">Kulturkalender Stuttgart-Vaihingen 2/2026</a> u. a. der <strong style="color:var(--chalk)">45. Vaihinger Herbst</strong> (18.–20. September, Kreativmeile am Vaihinger Markt) und der <strong style="color:var(--chalk)">47. Vaihinger Weihnachtsmarkt</strong> (28.–29. November, Vaihinger Markt &amp; Rathausplatz) bestätigt. Der Kalender enthält darüber hinaus zahlreiche weitere Konzerte, Ausstellungen, Kurse und Kleinveranstaltungen (u. a. im Circuleum, im Bürgerhaus Lauchhau-Lauchäcker und in der Stadtteilbibliothek), die hier aus Platzgründen nicht alle einzeln aufgeführt sind — das vollständige 12-seitige PDF lohnt einen eigenen Blick.
-  </div>
-</section>
-
-<section id="tsv">
-  <div class="section-head">
-    <h2 class="display">TSV Rohr</h2>
-    <span class="tag">Dürrlewangstraße 54 · 70565 Stuttgart-Rohr</span>
-  </div>
-  <div class="grid-two">
-    <div class="event-list" id="listTsv"></div>
-    <div class="note-card">
-      <strong style="color:var(--chalk)">Hinweis zur Datenlage</strong><br><br>
-      Die offizielle Vereinsseite <a href="http://www.tsv-rohr.de" target="_blank" rel="noopener">tsv-rohr.de</a> blockiert automatisierte Abfragen (robots.txt), daher konnten nicht alle internen Termine (z. B. Fußball-Terminkalender, Gymnastik, Dart, Judo) einzeln ausgelesen werden.<br><br>
-      Für den vollständigen, tagesaktuellen Kalender bitte direkt besuchen:
-      <div class="cta-row">
-        <a class="btn" href="http://www.tsv-rohr.de" target="_blank" rel="noopener">tsv-rohr.de öffnen</a>
-        <a class="btn ghost" href="https://www.fussball.de/verein/tsv-rohr-wuerttemberg/-/id/00ES8GNB100000A7VV0AG08LVUPGND5I" target="_blank" rel="noopener">Spielplan (fussball.de)</a>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -633,7 +602,6 @@
   // Editier-Version dieser Seite.
 
   let EVENTS_UMGEBUNG = [];
-  let EVENTS_TSV = [];
   let dataLoaded = false;
   let dataLoadError = null;
 
@@ -657,8 +625,7 @@
   // ---- Filterzustand ----
   const filterState = {
     showPast: false,
-    cats: new Set(['club', 'district', 'waldfest', 'festival']),
-    sections: new Set(['umgebung', 'tsv'])
+    cats: new Set(['club', 'district', 'waldfest', 'festival'])
   };
 
   function renderList(containerId, events, today){
@@ -763,9 +730,8 @@
     const today = startOfDay(now);
 
     const resUmgebung = renderList('listUmgebung', EVENTS_UMGEBUNG, today);
-    const resTsv = renderList('listTsv', EVENTS_TSV, today);
 
-    const allDated = [...EVENTS_UMGEBUNG, ...EVENTS_TSV].filter(e => e.date);
+    const allDated = [...EVENTS_UMGEBUNG].filter(e => e.date);
     const upcoming = allDated.filter(e => parseDate(e.endDate || e.date) >= today);
 
     document.getElementById('statUpcoming').textContent = upcoming.length;
@@ -783,11 +749,6 @@
   }
 
   // ---- Filterleiste: Event-Listener ----
-  function applySectionVisibility(){
-    document.getElementById('umgebung').style.display = filterState.sections.has('umgebung') ? '' : 'none';
-    document.getElementById('tsv').style.display = filterState.sections.has('tsv') ? '' : 'none';
-  }
-
   const filterShowPastEl = document.getElementById('filterShowPast');
   filterShowPastEl.checked = filterState.showPast;
   filterShowPastEl.addEventListener('change', ()=>{
@@ -795,41 +756,9 @@
     rebuild();
   });
 
-  document.querySelectorAll('[data-filter-cat]').forEach(chip => {
-    chip.addEventListener('click', ()=>{
-      const cat = chip.dataset.filterCat;
-      if(filterState.cats.has(cat)){
-        filterState.cats.delete(cat);
-        chip.classList.remove('active');
-      } else {
-        filterState.cats.add(cat);
-        chip.classList.add('active');
-      }
-      rebuild();
-    });
-  });
-
-  document.querySelectorAll('[data-filter-section]').forEach(chip => {
-    chip.addEventListener('click', ()=>{
-      const section = chip.dataset.filterSection;
-      if(filterState.sections.has(section)){
-        filterState.sections.delete(section);
-        chip.classList.remove('active');
-      } else {
-        filterState.sections.add(section);
-        chip.classList.add('active');
-      }
-      applySectionVisibility();
-    });
-  });
-
   document.getElementById('filterResetBtn').addEventListener('click', ()=>{
     filterState.showPast = false;
-    filterState.cats = new Set(['club', 'district', 'waldfest', 'festival']);
-    filterState.sections = new Set(['umgebung', 'tsv']);
     filterShowPastEl.checked = false;
-    document.querySelectorAll('[data-filter-cat], [data-filter-section]').forEach(chip => chip.classList.add('active'));
-    applySectionVisibility();
     rebuild();
   });
 
@@ -837,7 +766,6 @@
   function showListMessage(text, isError){
     const html = `<div class="note-card" style="${isError ? 'border-color:#e07a5f;color:#e07a5f;' : ''}">${text}</div>`;
     document.getElementById('listUmgebung').innerHTML = html;
-    document.getElementById('listTsv').innerHTML = html;
   }
 
   async function loadEvents(){
@@ -861,7 +789,6 @@
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       EVENTS_UMGEBUNG = Array.isArray(data.umgebung) ? data.umgebung : [];
-      EVENTS_TSV = Array.isArray(data.tsv) ? data.tsv : [];
       dataLoaded = true;
       dataLoadError = null;
       rebuild();
